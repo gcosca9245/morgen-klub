@@ -1,7 +1,7 @@
 # Veröffentlicht den statischen Export auf GitHub Pages (Branch gh-pages).
 # Der Upload-Weg dieses Repos unterstützt nur Text, deshalb kommen Inhalte base64-kodiert:
 #   deploy/part.*          kompletter Build (ersetzt gh-pages vollständig)
-#   deploy-patch/patch.b64 nur geänderte Build-Dateien (werden über gh-pages gelegt)
+#   patch-upload/part.*    nur geänderte Build-Dateien, ggf. in Teilen (werden über gh-pages gelegt)
 #   _upload/source.tar.b64 Quelltext-Stand (wird nach main entpackt)
 # Nach erfolgreichem Lauf werden die Upload-Reste aus main entfernt.
 name: Deploy
@@ -40,10 +40,10 @@ jobs:
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       - name: Build-Patch einspielen
-        if: hashFiles('deploy-patch/patch.b64') != ''
+        if: hashFiles('patch-upload/part.*') != ''
         run: |
           git worktree add /tmp/pages origin/gh-pages
-          base64 -d deploy-patch/patch.b64 | tar xzf - -C /tmp/pages
+          cat $(ls patch-upload/part.* | sort -V) | base64 -d | tar xzf - -C /tmp/pages
           cd /tmp/pages && git add -A
           git $GIT_AUTHOR commit -qm "Patch ${GITHUB_SHA::7}" || exit 0
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:gh-pages
@@ -52,7 +52,7 @@ jobs:
         run: |
           changed=0
           if [ -f _upload/source.tar.b64 ]; then base64 -d _upload/source.tar.b64 | tar -xf -; git rm -rq _upload; changed=1; fi
-          for d in deploy deploy-patch; do if [ -d "$d" ]; then git rm -rq "$d"; changed=1; fi; done
+          for d in deploy patch-upload; do if [ -d "$d" ]; then git rm -rq "$d"; changed=1; fi; done
           if [ "$changed" = 1 ]; then
             git add -A
             git $GIT_AUTHOR commit -m "Upload entpackt [skip ci]"
