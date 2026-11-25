@@ -199,7 +199,7 @@ export function Ritual() {
             </CircleButton>
           </div>
 
-          <div className="absolute inset-x-0 bottom-[9%] flex justify-center gap-2 sm:bottom-[11%]">
+          <div className="absolute inset-x-0 bottom-[9%] flex translate-y-[10px] justify-center gap-2 sm:bottom-[11%]">
             {SLIDES.map((s, i) => (
               <button
                 key={s.title}
@@ -207,7 +207,7 @@ export function Ritual() {
                 aria-label={`Schritt ${i + 1}: ${s.title}`}
                 aria-current={i === index}
                 onClick={() => setIndex(i)}
-                className="group grid h-6 place-items-center"
+                className="group relative grid h-11 place-items-center after:absolute after:-inset-x-[10px] after:-inset-y-1 after:content-['']"
               >
                 <span
                   className={cn(

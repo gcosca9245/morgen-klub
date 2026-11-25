@@ -126,7 +126,7 @@ export function Hero() {
             width={1920}
             height={1080}
             fetchPriority="high"
-            className="absolute inset-0 size-full object-cover object-[62%_50%] [@media(max-aspect-ratio:3/4)]:object-center"
+            className="absolute inset-0 size-full object-cover object-[62%_50%] [@media(max-aspect-ratio:3/4)]:object-[50%_30%]"
           />
         </picture>
         <canvas

@@ -82,7 +82,7 @@ export function Header() {
             go('#start');
           }}
           aria-label="Morgen Klub – zum Anfang"
-          className="rounded-md"
+          className="inline-flex min-h-11 shrink-0 items-center rounded-md"
         >
           <Logo className="text-[1.15rem] md:text-[1.3rem]" />
         </a>
@@ -112,11 +112,11 @@ export function Header() {
             type="button"
             onClick={openSearch}
             aria-label="Suche öffnen"
-            className="grid size-11 place-items-center rounded-full transition-colors duration-300 hover:bg-current/10"
+            className="grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-300 hover:bg-current/10"
           >
             <SearchIcon />
           </button>
-          <PillButton size="sm" onClick={() => go('#abo')} className="hidden sm:inline-flex">
+          <PillButton size="sm" onClick={() => go('#abo')} className="hidden shrink-0 whitespace-nowrap max-md:h-11 pointer-coarse:h-11 max-[374px]:px-4 sm:inline-flex">
             Klub beitreten
           </PillButton>
           <button

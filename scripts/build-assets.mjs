@@ -25,14 +25,14 @@ for (const name of ONLY_HERO ? [] : IMAGES) {
 
 /**
  * Hero-Sequenz aus dem 1080p-Film: jedes 2. Bild, quer in 1280/1920 px und als Hochformat-Ausschnitt
- * (720×1080, Ausschnitt fährt mit der Tasse mit) für Smartphones. Zusätzlich AVIF-Poster des ersten Frames (LCP).
+ * (eigener 9:16-Film, 720×1280) für Smartphones. Zusätzlich AVIF-Poster des ersten Frames (LCP).
  */
 const HERO = { file: 'hero-transition-1080.mp4', step: 2 };
 const HERO_VARIANTS = [
   { dir: '1920', vf: 'crop=1920:1080:0:4', q: '80' },
   { dir: '1280', vf: 'crop=1920:1080:0:4,scale=1280:720:flags=lanczos', q: '78' },
-  // Hochformat für Smartphones: Ausschnitt folgt der Tasse von rechts (x≈930) zur Bildmitte (x=600).
-  { dir: 'p', vf: "crop=720:1080:'600+330*(1-(3*pow(min(1\\,n/48)\\,2)-2*pow(min(1\\,n/48)\\,3)))':4", q: '70' },
+  // Hochformat für Smartphones: eigener 9:16-Film (ganze Tasse + Untertasse im Bild), 720×1280.
+  { dir: 'p', file: 'hero-transition-portrait.mp4', vf: 'crop=1080:1920:4:0,scale=720:1280:flags=lanczos', q: '74' },
 ];
 const manifest = {};
 for (const v of HERO_VARIANTS) {
@@ -40,7 +40,7 @@ for (const v of HERO_VARIANTS) {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   execFileSync('ffmpeg', [
-    '-loglevel', 'error', '-i', join(SRC, HERO.file),
+    '-loglevel', 'error', '-i', join(SRC, v.file ?? HERO.file),
     '-vf', `select='not(mod(n\\,${HERO.step}))',${v.vf}`,
     '-vsync', 'vfr', '-c:v', 'libwebp', '-quality', v.q, '-compression_level', '6',
     join(dir, '%03d.webp'),

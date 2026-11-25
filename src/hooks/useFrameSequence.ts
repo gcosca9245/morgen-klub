@@ -7,6 +7,7 @@ import { sequenceSource, type SequenceName } from '@/lib/sequences';
 interface Options {
   /** Überschreibt den Fokus der gewählten Variante. */
   focusX?: number;
+  /** Überschreibt den vertikalen Fokus der gewählten Variante. */
   focusY?: number;
   /** Laden erst starten, wenn das Canvas in die Nähe des Viewports kommt. */
   lazy?: boolean;
@@ -19,7 +20,7 @@ interface Options {
 export function useFrameSequence(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: SequenceName,
-  { focusX, focusY = 0.5, lazy = true }: Options = {},
+  { focusX, focusY, lazy = true }: Options = {},
 ) {
   const seqRef = useRef<FrameSequence | null>(null);
 
@@ -31,7 +32,7 @@ export function useFrameSequence(
       urlFor: source.urlFor,
       count: source.count,
       focusX: focusX ?? source.focusX,
-      focusY,
+      focusY: focusY ?? source.focusY,
     });
     seq.attach(canvas);
     seqRef.current = seq;

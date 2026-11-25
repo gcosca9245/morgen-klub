@@ -48,7 +48,7 @@ export function Footer() {
               placeholder="deine@email.de"
               aria-invalid={state === 'error'}
               aria-describedby="newsletter-msg"
-              className="h-14 flex-1 rounded-full bg-foam/15 px-6 text-foam ring-1 ring-foam/30 placeholder:text-foam/90 focus:bg-foam/20 focus:outline-none focus:ring-foam"
+              className="h-14 w-full rounded-full sm:w-auto sm:flex-1 bg-foam/15 px-6 text-foam ring-1 ring-foam/30 placeholder:text-foam/90 focus:bg-foam/20 focus:outline-none focus:ring-foam"
             />
             <PillButton type="submit" variant="foam" size="lg">
               Eintragen
@@ -80,11 +80,11 @@ export function Footer() {
           <div>
             <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/90">Kontakt</h3>
             <p className="leading-relaxed">
-              <a className="underline-offset-4 hover:underline" href="mailto:hallo@example.com">
+              <a className="underline-offset-4 hover:underline max-md:inline-flex max-md:min-h-11 max-md:items-center pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center" href="mailto:hallo@example.com">
                 hallo@example.com
               </a>
               <br />
-              <a className="inline-flex items-center gap-1 underline-offset-4 hover:underline" href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">
+              <a className="inline-flex items-center gap-1 underline-offset-4 hover:underline max-md:min-h-11 pointer-coarse:min-h-11" href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">
                 Instagram <ArrowUpRight />
               </a>
             </p>
@@ -103,9 +103,9 @@ export function Footer() {
       <div className="relative mx-auto flex max-w-[1600px] flex-col justify-between gap-3 border-t border-foam/20 px-5 py-6 text-xs text-foam/90 md:flex-row md:px-10">
         <p>© {new Date().getFullYear()} Morgen Klub · Konzeptstudie, keine echten Bestellungen</p>
         <p className="flex gap-5">
-          <a href="#kontakt" className="hover:text-foam">Impressum</a>
-          <a href="#kontakt" className="hover:text-foam">Datenschutz</a>
-          <a href="#kontakt" className="hover:text-foam">AGB</a>
+          <a href="#kontakt" className="hover:text-foam max-md:inline-flex max-md:min-h-11 max-md:items-center pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center">Impressum</a>
+          <a href="#kontakt" className="hover:text-foam max-md:inline-flex max-md:min-h-11 max-md:items-center pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center">Datenschutz</a>
+          <a href="#kontakt" className="hover:text-foam max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:items-center">AGB</a>
         </p>
       </div>
     </footer>

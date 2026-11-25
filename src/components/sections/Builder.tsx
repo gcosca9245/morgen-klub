@@ -17,12 +17,15 @@ interface FieldProps<T extends string> {
   options: readonly { id: T; label: string }[];
   onChange: (v: T) => void;
   dark?: boolean;
+  /** Auf schmalen Screens volle Breite (lange Optionstexte). */
+  wide?: boolean;
 }
 
-function SelectField<T extends string>({ label, value, options, onChange, dark = false }: FieldProps<T>) {
+function SelectField<T extends string>({ label, value, options, onChange, dark = false, wide = false }: FieldProps<T>) {
   const id = useId();
   return (
-    <div className="min-w-0 flex-1">
+    // `wide`: auf schmalen Screens über beide Spalten, damit lange Optionen nicht abgeschnitten werden
+    <div className={cn('min-w-0 flex-1', wide && 'max-sm:col-span-2')}>
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
@@ -31,7 +34,7 @@ function SelectField<T extends string>({ label, value, options, onChange, dark =
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
         className={cn(
-          'select-pill h-12 w-full cursor-pointer rounded-full pl-5 pr-10 text-[0.95rem] font-semibold transition-colors duration-300',
+          'select-pill h-12 w-full cursor-pointer rounded-full pl-5 pr-10 text-[0.95rem] max-sm:pl-4 max-sm:pr-9 font-semibold transition-colors duration-300',
           dark ? 'on-dark bg-roast text-foam hover:bg-espresso' : 'bg-milk text-roast ring-1 ring-roast/15 hover:ring-roast/40',
         )}
       >
@@ -86,12 +89,14 @@ export function Builder() {
           <div className="grid flex-1 grid-cols-2 gap-3 lg:flex">
             <SelectField<RoastId>
               dark
+              wide
               label="Röstung"
               value={sel.roast}
               options={ROASTS.map((r) => ({ id: r.id, label: `${r.name} · ${r.roast}` }))}
               onChange={(roast) => updateSelection({ roast })}
             />
             <SelectField<RhythmId>
+              wide
               label="Rhythmus"
               value={sel.rhythm}
               options={RHYTHMS.map((r) => ({ id: r.id, label: r.label }))}

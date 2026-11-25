@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Smartphones im Querformat: wenig Höhe, Desktop-Breakpoints greifen aber schon. */
+@custom-variant short (@media (max-height: 520px) and (orientation: landscape));
+
 @theme {
   --color-caramel: #a9693b;
   --color-caramel-deep: #864d28;

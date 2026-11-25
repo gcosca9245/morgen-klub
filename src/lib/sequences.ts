@@ -7,13 +7,13 @@ interface SequenceVariants {
   /** Querformat-Breiten in px, aufsteigend (Ordnername = Breite). */
   widths: readonly number[];
   /** Optionaler Hochformat-Ausschnitt (Ordner `p`) samt Fokus für Smartphones. */
-  portrait?: { width: number; focusX: number };
+  portrait?: { width: number; focusX: number; focusY: number };
   /** Bildausschnitt für die Querformat-Varianten. */
   focusX: number;
 }
 
 const VARIANTS: Record<SequenceName, SequenceVariants> = {
-  hero: { widths: [1280, 1920], portrait: { width: 720, focusX: 0.5 }, focusX: 0.62 },
+  hero: { widths: [1280, 1920], portrait: { width: 720, focusX: 0.5, focusY: 0.3 }, focusX: 0.62 },
   turntable: { widths: [720, 1280], focusX: 0.5 },
 };
 
@@ -33,9 +33,12 @@ export function sequenceSource(name: SequenceName, cssWidth: number, cssHeight =
   const portrait = v.portrait && cssHeight > 0 && cssWidth / cssHeight <= PORTRAIT_MAX_ASPECT;
   let dir: string;
   let focusX = v.focusX;
+  let focusY = 0.5;
   if (portrait && v.portrait) {
     dir = 'p';
     focusX = v.portrait.focusX;
+    // Tablets im Hochformat schneiden oben/unten: Tasse bleibt unterhalb der Headline.
+    focusY = v.portrait.focusY;
   } else {
     const needed = cssWidth * dpr * 0.85;
     dir = String(v.widths.find((w) => w >= needed) ?? v.widths[v.widths.length - 1]);
@@ -43,6 +46,7 @@ export function sequenceSource(name: SequenceName, cssWidth: number, cssHeight =
   return {
     count: manifest[name],
     focusX,
+    focusY,
     urlFor: (i: number) => frameUrl(name, dir, i),
     poster: frameUrl(name, dir, 0),
   };

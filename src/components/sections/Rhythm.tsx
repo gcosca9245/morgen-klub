@@ -14,9 +14,9 @@ import { useSmoothScroll } from '../providers/SmoothScroll';
 
 /** Position der Rhythmus-Pills um den Drehteller (Desktop / Mobil). */
 const PILL_LAYOUT: Record<RhythmId, string> = {
-  woechentlich: 'left-[5%] top-[62%] md:left-[9%] md:top-[60%]',
-  zweiwoechentlich: 'right-[6%] top-[44%] md:left-[47%] md:right-auto md:top-[30%]',
-  monatlich: 'right-[6%] top-[84%] md:right-[8%] md:top-[64%]',
+  woechentlich: 'left-[5%] top-[62%] md:left-[9%] md:top-[60%] short:left-[48%]! short:top-[72%]!',
+  zweiwoechentlich: 'right-[6%] top-[44%] md:left-[47%] md:right-auto md:top-[30%] short:left-[62%]! short:top-[20%]!',
+  monatlich: 'right-[6%] top-[84%] md:right-[8%] md:top-[64%] short:right-[3%]! short:top-[58%]!',
 };
 
 /**
@@ -89,11 +89,11 @@ export function Rhythm() {
       <canvas
         ref={canvas}
         aria-hidden="true"
-        className="absolute -left-[18%] bottom-[6%] aspect-video w-[136%] will-change-transform [mask-image:radial-gradient(52%_52%_at_50%_54%,#000_72%,transparent_100%)] md:-bottom-[3%] md:left-auto md:-right-[3%] md:w-[76%]"
+        className="absolute -left-[18%] bottom-[6%] aspect-video w-[136%] will-change-transform [mask-image:radial-gradient(52%_52%_at_50%_54%,#000_72%,transparent_100%)] md:-bottom-[3%] md:left-auto md:-right-[3%] md:w-[76%] short:-right-[1%]! short:bottom-[4%]! short:w-[52%]!"
       />
 
-      <div className="relative z-10 mx-auto h-full max-w-[1600px] px-5 pt-28 md:px-10 md:pt-[22vh]">
-        <h2 id="rhythm-title" data-rhythm-title className="font-display max-w-[44rem] text-[clamp(2.6rem,5.4vw,5.2rem)] font-extrabold leading-[0.92]">
+      <div className="relative z-10 mx-auto h-full max-w-[1600px] px-5 pt-28 md:px-10 md:pt-[22vh] short:pt-20!">
+        <h2 id="rhythm-title" data-rhythm-title className="font-display max-w-[44rem] text-[clamp(2.6rem,5.4vw,5.2rem)] font-extrabold leading-[0.92] short:max-w-[48%] short:text-[2.3rem]!">
           {/* Textwechsel wie in der Referenz: Anführungszeichen setzen ein, zweite Zeile „veredelt.“ steigt auf. */}
           <span className="block">
             <span data-quote className="inline-block opacity-0" aria-hidden="true">
@@ -105,11 +105,11 @@ export function Rhythm() {
             <SplitWords text="veredelt.“" />
           </span>
         </h2>
-        <div data-rhythm-body className="mt-5 max-w-[24rem]">
-          <p className="text-lg leading-snug text-roast/80">
+        <div data-rhythm-body className="mt-5 max-w-[24rem] short:mt-3 short:max-w-[42%]">
+          <p className="text-lg leading-snug text-roast/80 short:text-base">
             Frisch geröstet und so oft, wie du ihn trinkst: jede Woche, alle 14 Tage oder einmal im Monat.
           </p>
-          <PillButton size="lg" className="mt-7" onClick={() => scrollTo('#abo', { offset: -24 })}>
+          <PillButton size="lg" className="mt-7 short:mt-4" onClick={() => scrollTo('#abo', { offset: -24 })}>
             Klub beitreten
           </PillButton>
         </div>
@@ -135,7 +135,7 @@ export function Rhythm() {
         ))}
       </div>
 
-      <p aria-live="polite" className="absolute bottom-16 left-5 z-20 text-sm text-roast/70 md:left-10">
+      <p aria-live="polite" className="absolute bottom-16 left-5 z-20 text-sm text-roast/70 md:left-10 short:bottom-5">
         {active ? `${active.label}: ${Math.round(active.discount * 100)} % Klub-Rabatt pro Lieferung` : null}
       </p>
 
