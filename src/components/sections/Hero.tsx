@@ -4,8 +4,8 @@ import { useRef } from 'react';
 import { useGsap } from '@/hooks/useGsap';
 import { useFrameSequence } from '@/hooks/useFrameSequence';
 import { prefersReducedMotion } from '@/hooks/useReducedMotion';
-import { asset } from '@/lib/asset';
 import { EASE } from '@/lib/gsap';
+import { sequencePoster } from '@/lib/sequences';
 import { PillButton } from '../ui/PillButton';
 import { CircleButton } from '../ui/CircleButton';
 import { ArrowLeft, ArrowRight } from '../ui/Icons';
@@ -16,6 +16,11 @@ import { useSmoothScroll } from '../providers/SmoothScroll';
 const CHAPTERS = [0, 0.46, 1] as const;
 const PIN_LENGTH = 1.8; // Viewport-Höhen
 
+/** Muss zu `PORTRAIT_MAX_ASPECT` in `sequenceSource` passen: Hochformat-Poster ≙ Hochformat-Frames. */
+const PORTRAIT_MEDIA = '(max-aspect-ratio: 3/4)';
+const posterSet = (ext: 'webp' | 'avif') =>
+  `${sequencePoster('hero', '1280', ext)} 1280w, ${sequencePoster('hero', '1920', ext)} 1920w`;
+
 /**
  * Hero: Karamell-Bühne mit gescrubbtem Film (schwebende Tasse → Draufsicht auf Untertasse).
  * Zum Ende schrumpft die Bühne zur Karte mit runden Ecken und gibt die Creme-Seite frei.
@@ -23,7 +28,7 @@ const PIN_LENGTH = 1.8; // Viewport-Höhen
 export function Hero() {
   const root = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-  const seq = useFrameSequence(canvas, 'hero', { focusX: 0.62, lazy: false });
+  const seq = useFrameSequence(canvas, 'hero', { lazy: false });
   const { scrollTo } = useSmoothScroll();
 
   useGsap(
@@ -109,17 +114,21 @@ export function Hero() {
     <section id="start" ref={root} data-header-tone="light" aria-label="Willkommen" className="relative h-[100svh]">
       <div data-panel className="group/hero absolute inset-0 overflow-hidden bg-[#7a4421] text-foam will-change-[clip-path]">
         {/* Poster = erster Frame: sofort sichtbar (LCP), das Canvas übernimmt nahtlos. */}
-        {/* eslint-disable-next-line @next/next/no-img-element -- statischer Export */}
-        <img
-          src={asset('/media/seq/hero/1280/001.webp')}
-          srcSet={`${asset('/media/seq/hero/720/001.webp')} 720w, ${asset('/media/seq/hero/1280/001.webp')} 1280w`}
-          sizes="100vw"
-          alt=""
-          width={1280}
-          height={720}
-          fetchPriority="high"
-          className="absolute inset-0 size-full object-cover object-[62%_50%]"
-        />
+        <picture>
+          <source media={PORTRAIT_MEDIA} type="image/avif" srcSet={sequencePoster('hero', 'p', 'avif')} />
+          <source media={PORTRAIT_MEDIA} type="image/webp" srcSet={sequencePoster('hero', 'p', 'webp')} />
+          <source type="image/avif" srcSet={posterSet('avif')} sizes="100vw" />
+          <img
+            src={sequencePoster('hero', '1920', 'webp')}
+            srcSet={posterSet('webp')}
+            sizes="100vw"
+            alt=""
+            width={1920}
+            height={1080}
+            fetchPriority="high"
+            className="absolute inset-0 size-full object-cover object-[62%_50%] [@media(max-aspect-ratio:3/4)]:object-center"
+          />
+        </picture>
         <canvas
           ref={canvas}
           aria-hidden="true"

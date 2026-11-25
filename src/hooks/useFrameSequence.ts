@@ -5,6 +5,7 @@ import { FrameSequence } from '@/lib/frame-sequence';
 import { sequenceSource, type SequenceName } from '@/lib/sequences';
 
 interface Options {
+  /** Überschreibt den Fokus der gewählten Variante. */
   focusX?: number;
   focusY?: number;
   /** Laden erst starten, wenn das Canvas in die Nähe des Viewports kommt. */
@@ -18,15 +19,20 @@ interface Options {
 export function useFrameSequence(
   canvasRef: RefObject<HTMLCanvasElement | null>,
   name: SequenceName,
-  { focusX = 0.5, focusY = 0.5, lazy = true }: Options = {},
+  { focusX, focusY = 0.5, lazy = true }: Options = {},
 ) {
   const seqRef = useRef<FrameSequence | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const source = sequenceSource(name, canvas.clientWidth);
-    const seq = new FrameSequence({ urlFor: source.urlFor, count: source.count, focusX, focusY });
+    const source = sequenceSource(name, canvas.clientWidth, canvas.clientHeight);
+    const seq = new FrameSequence({
+      urlFor: source.urlFor,
+      count: source.count,
+      focusX: focusX ?? source.focusX,
+      focusY,
+    });
     seq.attach(canvas);
     seqRef.current = seq;
 

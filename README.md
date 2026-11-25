@@ -16,7 +16,7 @@ mit eigenem Code, eigener Marke („Morgen Klub“), eigenen generierten Fotos/F
 
 | Bereich | Umsetzung |
 | --- | --- |
-| Hero | Gepinnte Karamell-Bühne, Canvas-Bildsequenz (73 Frames) wird gescrubbt: schwebende Tasse → Draufsicht. Headline steigt aus, danach schrumpft die Bühne per `clip-path` zur Karte mit runden Ecken. Pfeile beim Hover springen zwischen Kapiteln, Zeiger-Parallaxe. |
+| Hero | Gepinnte Karamell-Bühne, Canvas-Bildsequenz (73 Frames aus einem 1080p-Film, 1920/1280 px quer + 720×1080-Hochformat mit mitfahrendem Ausschnitt) wird gescrubbt: schwebende Tasse → Draufsicht. Headline steigt aus, danach schrumpft die Bühne per `clip-path` zur Karte mit runden Ecken. Pfeile beim Hover springen zwischen Kapiteln, Zeiger-Parallaxe. |
 | Rhythmus | Drehteller mit vier Röstungs-Tüten als echte three.js-Szene (Holzmaserung, Etiketten, weiche Schatten), vorgerendert in 96 Frames für eine geometrisch stabile 360°-Drehung mit dem Scroll. Danach Textwechsel zu „…veredelt.“ und Rhythmus-Pills, die wählbar sind (fließen in den Builder). |
 | Drei Schritte | Karten-Slider mit organischer Silhouette (`clip-path: path()` pixelgenau aus `organicCardPath`), angeschnittene Nachbarn, Pfeile in den Einbuchtungen, Drag/Swipe, Tastatur, Parallaxe. |
 | Abo-Builder | Überlappendes Panel mit Live-Preis (getweente Zahl), Auswahl synchron mit Pills und Karten. |
@@ -43,8 +43,9 @@ assets-src/            Quellbilder und -filme (generiert)
 
 ## Performance & Zugänglichkeit
 
-- Erster Hero-Frame als `<img fetchpriority="high">` (LCP), Canvas übernimmt nahtlos; Sequenzen laden progressiv
-  (jeder 8. → 4. → 2. → jeder Frame) und erst in Viewport-Nähe; 720er-Frames auf kleinen Displays.
+- Erster Hero-Frame als `<picture>` (AVIF/WebP, Hochformat-Quelle per `max-aspect-ratio`) mit `fetchpriority="high"` (LCP), Canvas übernimmt nahtlos; Sequenzen laden progressiv
+  (jeder 8. → 4. → 2. → jeder Frame) und erst in Viewport-Nähe; `sequenceSource` wählt je Sequenz die kleinste scharfe Variante (Breite × DPR ≤ 2, Hochformat-Satz bei schmalen Canvases).
+  Nur Hero neu bauen: `node scripts/build-assets.mjs --hero`.
 - Animationen nur über `transform`, `opacity` und `clip-path`; `gsap.context` räumt bei Unmount auf.
 - `prefers-reduced-motion`: kein Smooth-Scroll, keine Pins/Scrubs, Inhalte statisch sichtbar.
 - Native `<dialog>` (Fokusfalle, Esc), Skip-Link, beschriftete Formulare mit Fehlermeldungen, `aria-pressed`/`aria-expanded`,
