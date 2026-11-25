@@ -1,0 +1,52 @@
+# Veröffentlicht den vorgebauten statischen Export auf GitHub Pages (Branch gh-pages).
+# Der Upload-Weg dieses Repos unterstützt nur Text: Quelltext liegt beim ersten Upload als
+# base64-Archiv in _upload/, der fertige Build als base64-Teile in deploy/. Der Workflow
+# entpackt den Quelltext einmalig nach main und veröffentlicht den Build.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Build wiederherstellen
+        run: |
+          test -d deploy || { echo "Kein deploy/-Ordner – nichts zu veröffentlichen."; exit 0; }
+          cat $(ls deploy/part.* | sort -V) | base64 -d > /tmp/site.tgz
+          mkdir -p /tmp/public_site && tar xzf /tmp/site.tgz -C /tmp/public_site
+          touch /tmp/public_site/.nojekyll
+
+      - name: Auf gh-pages veröffentlichen
+        run: |
+          test -d /tmp/public_site || exit 0
+          cd /tmp/public_site
+          git init -q -b gh-pages
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Deploy ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      - name: Quelltext entpacken und Upload-Reste entfernen
+        run: |
+          changed=0
+          if [ -f _upload/source.tar.b64 ]; then base64 -d _upload/source.tar.b64 | tar -xf -; git rm -rq _upload; changed=1; fi
+          if [ -d deploy ]; then git rm -rq deploy; changed=1; fi
+          if [ "$changed" = 1 ]; then
+            git add -A
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Quelltext entpackt [skip ci]"
+            git push origin HEAD:main
+          fi
