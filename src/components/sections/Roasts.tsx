@@ -57,7 +57,7 @@ function RoastCard({ roast, selected, onPick }: { roast: Roast; selected: boolea
           <h3 className="font-display text-2xl font-bold">{roast.name}</h3>
           <p className="shrink-0 text-sm font-semibold tabular-nums">ab {formatEur(roast.pricePer250 * 0.85)}</p>
         </div>
-        <p className="mt-1 text-sm text-roast/65">
+        <p className="mt-1 text-sm text-roast/75">
           {roast.origin} · für {roast.brew}
         </p>
         <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Geschmacksnoten">

@@ -84,7 +84,7 @@ export function CheckoutDialog() {
           </div>
           <p className="ml-auto text-right text-sm">
             <span className="block text-lg font-bold">{formatEur(q.total)}</span>
-            <span className="text-roast/60">pro Lieferung</span>
+            <span className="text-roast/75">pro Lieferung</span>
           </p>
         </div>
         <ol className="mt-6 flex gap-2 text-xs font-semibold" aria-label="Fortschritt">
@@ -139,12 +139,12 @@ export function CheckoutDialog() {
                   <input type="radio" name="payment" value={p.id} checked={payment === p.id} onChange={() => setPayment(p.id)} className="size-4 accent-[#4b2a1d]" />
                   <span>
                     <span className="block font-semibold">{p.label}</span>
-                    <span className="text-sm text-roast/60">{p.hint}</span>
+                    <span className="text-sm text-roast/75">{p.hint}</span>
                   </span>
                 </label>
               ))}
             </fieldset>
-            <p className="text-sm text-roast/60">Demo: Es wird keine echte Zahlung ausgelöst. Für den Echtbetrieb ist die Anbindung an Stripe vorgesehen.</p>
+            <p className="text-sm text-roast/75">Demo: Es wird keine echte Zahlung ausgelöst. Für den Echtbetrieb ist die Anbindung an Stripe vorgesehen.</p>
             <div className="mt-2 flex gap-3">
               <PillButton variant="ghost" size="lg" onClick={() => setStep('adresse')}>
                 Zurück

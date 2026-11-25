@@ -104,7 +104,7 @@ export function Builder() {
             Ritual starten
           </PillButton>
         </div>
-        <p className="mt-4 px-1 text-xs text-roast/60">Keine Mindestlaufzeit · jederzeit pausieren oder kündigen · Lieferung in 48 Stunden</p>
+        <p className="mt-4 px-1 text-xs text-roast/75">Keine Mindestlaufzeit · jederzeit pausieren oder kündigen · Lieferung in 48 Stunden</p>
       </div>
     </div>
   );

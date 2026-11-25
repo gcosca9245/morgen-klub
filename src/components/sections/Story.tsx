@@ -88,7 +88,7 @@ export function Story() {
                   <dt className="sr-only">{s.label}</dt>
                   <dd>
                     <span className="font-display block text-4xl font-extrabold md:text-5xl">{s.value}</span>
-                    <span className="mt-1 block text-sm text-roast/65">{s.label}</span>
+                    <span className="mt-1 block text-sm text-roast/75">{s.label}</span>
                   </dd>
                 </div>
               ))}

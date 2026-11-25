@@ -30,12 +30,12 @@ export function Footer() {
   };
 
   return (
-    <footer id="kontakt" ref={root} data-header-tone="light" className="relative overflow-hidden rounded-t-[2.5rem] bg-caramel text-foam">
+    <footer id="kontakt" ref={root} data-header-tone="light" className="relative overflow-hidden rounded-t-[2.5rem] bg-caramel-deep text-foam">
       <div aria-hidden="true" className="grain absolute inset-0" />
       <div className="relative mx-auto grid max-w-[1600px] gap-14 px-5 pb-10 pt-20 md:grid-cols-12 md:px-10 md:pt-28">
         <div className="md:col-span-5">
           <h2 className="font-display text-[clamp(2.2rem,4.4vw,4.2rem)] font-extrabold leading-[0.95]">Morgen schon was vor?</h2>
-          <p className="mt-5 max-w-sm text-lg leading-snug text-foam/85">Neue Röstungen, Brühtipps und einmal im Monat ein Gutschein. Kein Spam.</p>
+          <p className="mt-5 max-w-sm text-lg leading-snug text-foam/90">Neue Röstungen, Brühtipps und einmal im Monat ein Gutschein. Kein Spam.</p>
           <form onSubmit={onSubmit} noValidate className="mt-8 flex max-w-md flex-col gap-3 sm:flex-row">
             <label htmlFor="newsletter" className="sr-only">
               E-Mail-Adresse
@@ -48,13 +48,13 @@ export function Footer() {
               placeholder="deine@email.de"
               aria-invalid={state === 'error'}
               aria-describedby="newsletter-msg"
-              className="h-14 flex-1 rounded-full bg-foam/15 px-6 text-foam ring-1 ring-foam/30 placeholder:text-foam/60 focus:bg-foam/20 focus:outline-none focus:ring-foam"
+              className="h-14 flex-1 rounded-full bg-foam/15 px-6 text-foam ring-1 ring-foam/30 placeholder:text-foam/90 focus:bg-foam/20 focus:outline-none focus:ring-foam"
             />
             <PillButton type="submit" variant="foam" size="lg">
               Eintragen
             </PillButton>
           </form>
-          <p id="newsletter-msg" aria-live="polite" className="mt-3 min-h-5 text-sm text-foam/85">
+          <p id="newsletter-msg" aria-live="polite" className="mt-3 min-h-5 text-sm text-foam/90">
             {state === 'done' && 'Danke! Bitte bestätige noch kurz die E-Mail in deinem Postfach.'}
             {state === 'error' && 'Bitte prüfe die E-Mail-Adresse.'}
           </p>
@@ -62,7 +62,7 @@ export function Footer() {
 
         <div className="grid grid-cols-2 gap-8 text-foam/90 md:col-span-6 md:col-start-7 md:grid-cols-3">
           <div>
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/60">Röstcafé</h3>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/90">Röstcafé</h3>
             <address className="not-italic leading-relaxed">
               Musterstraße 12
               <br />
@@ -70,7 +70,7 @@ export function Footer() {
             </address>
           </div>
           <div>
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/60">Geöffnet</h3>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/90">Geöffnet</h3>
             <p className="leading-relaxed">
               Di–Fr 8–17 Uhr
               <br />
@@ -78,7 +78,7 @@ export function Footer() {
             </p>
           </div>
           <div>
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/60">Kontakt</h3>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-foam/90">Kontakt</h3>
             <p className="leading-relaxed">
               <a className="underline-offset-4 hover:underline" href="mailto:hallo@example.com">
                 hallo@example.com
@@ -100,7 +100,7 @@ export function Footer() {
         ))}
       </p>
 
-      <div className="relative mx-auto flex max-w-[1600px] flex-col justify-between gap-3 border-t border-foam/20 px-5 py-6 text-xs text-foam/70 md:flex-row md:px-10">
+      <div className="relative mx-auto flex max-w-[1600px] flex-col justify-between gap-3 border-t border-foam/20 px-5 py-6 text-xs text-foam/90 md:flex-row md:px-10">
         <p>© {new Date().getFullYear()} Morgen Klub · Konzeptstudie, keine echten Bestellungen</p>
         <p className="flex gap-5">
           <a href="#kontakt" className="hover:text-foam">Impressum</a>

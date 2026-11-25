@@ -67,13 +67,13 @@ export function SearchDialog() {
         />
       </form>
       <ul className="p-3" aria-live="polite">
-        {hits.length === 0 && <li className="p-4 text-roast/60">Nichts gefunden. Versuch es mit „Espresso“ oder „Pausieren“.</li>}
+        {hits.length === 0 && <li className="p-4 text-roast/75">Nichts gefunden. Versuch es mit „Espresso“ oder „Pausieren“.</li>}
         {hits.map((h) => (
           <li key={`${h.href}-${h.title}`}>
             <button type="button" onClick={() => pick(h.href)} className="group flex w-full items-center justify-between gap-4 rounded-2xl p-4 text-left hover:bg-milk">
               <span>
                 <span className="block font-semibold">{h.title}</span>
-                <span className="text-sm text-roast/60">{h.meta}</span>
+                <span className="text-sm text-roast/75">{h.meta}</span>
               </span>
               <ArrowRight className="opacity-0 transition-opacity group-hover:opacity-100" />
             </button>

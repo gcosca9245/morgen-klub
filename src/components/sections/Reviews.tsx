@@ -15,7 +15,7 @@ function Row({ hidden = false }: { hidden?: boolean }) {
             ★★★★★
           </p>
           <blockquote className="font-display mt-4 text-xl font-semibold leading-snug md:text-2xl">„{r.quote}“</blockquote>
-          <p className="mt-5 text-sm text-roast/60">{r.name}</p>
+          <p className="mt-5 text-sm text-roast/75">{r.name}</p>
         </li>
       ))}
     </ul>
