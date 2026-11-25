@@ -54,6 +54,7 @@ export function Hero() {
           start: 'top top',
           end: () => `+=${window.innerHeight * PIN_LENGTH}`,
           pin: true,
+          anticipatePin: 1,
           scrub: 0.6,
           invalidateOnRefresh: true,
           onUpdate: (self) => setChapter(self.progress),

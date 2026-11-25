@@ -48,7 +48,7 @@ function RoastCard({ roast, selected, onPick }: { roast: Roast; selected: boolea
             className="aspect-[4/5] w-full object-cover object-[50%_62%]"
           />
         </div>
-        <span className="absolute left-4 top-4 rounded-full bg-milk/90 px-3 py-1 text-xs font-semibold tracking-wide text-roast backdrop-blur">
+        <span className="absolute left-4 top-4 rounded-full bg-milk/90 px-3 py-1 text-xs font-semibold tracking-wide text-roast backdrop-blur pointer-coarse:backdrop-blur-none">
           Nº {roast.no} · {roast.roast}
         </span>
       </div>

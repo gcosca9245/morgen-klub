@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import type { EspressoScene, Hotspot } from '../espresso/machine-scene';
+import type { GameScene, Hotspot } from '../espresso/game-scene';
+import { asset } from '@/lib/asset';
 import type { Sfx } from '../espresso/sfx';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
@@ -42,6 +43,27 @@ const ACTION_LABEL: Partial<Record<Phase, string>> = {
   done: 'Noch einen Shot',
 };
 
+/** Standbild je Phase für die Variante ohne WebGL. */
+const STILL_FOR: Record<Phase, 'off' | 'filled' | 'brew'> = {
+  off: 'off',
+  warming: 'off',
+  empty: 'off',
+  filling: 'filled',
+  ready: 'filled',
+  grinding: 'filled',
+  dosed: 'filled',
+  brewing: 'brew',
+  done: 'brew',
+};
+
+function supportsWebGL2() {
+  try {
+    return Boolean(document.createElement('canvas').getContext('webgl2'));
+  } catch {
+    return false;
+  }
+}
+
 const stepState = (phase: Phase, until: Phase) => {
   const p = ORDER.indexOf(phase);
   const u = ORDER.indexOf(until);
@@ -56,14 +78,16 @@ export function Espresso() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
-  const sceneRef = useRef<EspressoScene | null>(null);
+  const sceneRef = useRef<GameScene | null>(null);
   const sfxRef = useRef<Sfx | null>(null);
   const phaseRef = useRef<Phase>('off');
   const reduced = useReducedMotion();
   const { scrollTo } = useSmoothScroll();
 
   const [phase, setPhaseState] = useState<Phase>('off');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'ready'>('idle');
+  /** 3D-Szene oder Standbild-Variante (ohne WebGL bzw. nach Kontextverlust). */
+  const [mode, setMode] = useState<'3d' | 'still'>('3d');
   const [sound, setSound] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [shots, setShots] = useState(0);
@@ -122,48 +146,86 @@ export function Espresso() {
     onHotspotRef.current = onHotspot;
   }, [onHotspot]);
 
-  // Szene erst laden, wenn die Sektion in die Nähe kommt
+  // Szene erst laden, wenn die Sektion in die Nähe kommt – und erst, wenn der Browser Luft hat.
   useEffect(() => {
     const el = section.current;
     const cv = canvas.current;
     if (!el || !cv) return;
-    let scene: EspressoScene | null = null;
+    let scene: GameScene | null = null;
     let cancelled = false;
     let vis: IntersectionObserver | undefined;
     let ro: ResizeObserver | undefined;
+    let stopWaiting = () => {};
+
+    const switchToStill = async () => {
+      const { FallbackScene } = await import('../espresso/fallback-scene');
+      if (cancelled) return;
+      scene?.dispose();
+      scene = new FallbackScene(reduced);
+      sceneRef.current = scene;
+      setMode('still');
+      setStatus('ready');
+    };
 
     const load = async () => {
       setStatus('loading');
+      const { Sfx } = await import('../espresso/sfx');
+      sfxRef.current = new Sfx();
+      if (!supportsWebGL2()) return switchToStill();
       try {
-        const [{ EspressoScene }, { Sfx }] = await Promise.all([import('../espresso/machine-scene'), import('../espresso/sfx')]);
+        const { EspressoScene } = await import('../espresso/machine-scene');
         await document.fonts?.ready;
         if (cancelled) return;
-        scene = new EspressoScene(cv, { reducedMotion: reduced, onHotspot: (h) => onHotspotRef.current(h) });
-        sceneRef.current = scene;
-        sfxRef.current = new Sfx();
-        scene.setHint(HOTSPOT_FOR[phaseRef.current] ?? null);
+        const s3d = new EspressoScene(cv, {
+          reducedMotion: reduced,
+          onHotspot: (h) => onHotspotRef.current(h),
+          onContextLost: () => void switchToStill(),
+        });
+        scene = s3d;
+        // Shader vorab kompilieren; hängt das (alte GPU-Treiber), nach 4 s trotzdem starten.
+        await Promise.race([s3d.warmup(), new Promise((r) => setTimeout(r, 4000))]);
+        if (cancelled) return;
+        sceneRef.current = s3d;
+        s3d.setHint(HOTSPOT_FOR[phaseRef.current] ?? null);
         ro = new ResizeObserver(() => scene?.resize());
         ro.observe(cv);
         vis = new IntersectionObserver(([e]) => scene?.setVisible(Boolean(e?.isIntersecting)));
         vis.observe(cv);
+        setMode('3d');
         setStatus('ready');
       } catch {
-        if (!cancelled) setStatus('error');
+        if (!cancelled) await switchToStill();
       }
     };
 
     const near = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          near.disconnect();
-          void load();
-        }
+        if (!entries.some((e) => e.isIntersecting)) return;
+        near.disconnect();
+        // Aufbau der 3D-Szene erst, wenn gerade nicht gescrollt wird (vermeidet Ruckler beim Wischen).
+        let quiet: ReturnType<typeof setTimeout> | undefined;
+        const start = () => {
+          window.removeEventListener('scroll', onScroll);
+          if ('requestIdleCallback' in window) window.requestIdleCallback(() => void load(), { timeout: 1500 });
+          else setTimeout(() => void load(), 50);
+        };
+        const onScroll = () => {
+          clearTimeout(quiet);
+          quiet = setTimeout(start, 280);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        stopWaiting = () => {
+          clearTimeout(quiet);
+          window.removeEventListener('scroll', onScroll);
+        };
+        onScroll();
       },
-      { rootMargin: '600px 0px' },
+      { rootMargin: '400px 0px' },
     );
     near.observe(el);
     return () => {
       cancelled = true;
+      stopWaiting();
       near.disconnect();
       vis?.disconnect();
       ro?.disconnect();
@@ -263,8 +325,7 @@ export function Espresso() {
           </ol>
 
           <p aria-live="polite" className="mt-6 min-h-[3.2em] max-w-md text-[0.98rem] leading-relaxed text-roast/80">
-            {!ready && status !== 'error' ? 'Die Maschine wird aufgebaut …' : null}
-            {status === 'error' ? 'Dein Browser kann die 3D-Szene leider nicht darstellen.' : null}
+            {!ready ? 'Die Maschine wird aufgebaut …' : null}
             {ready ? (phase === 'brewing' ? `Extraktion läuft · ${seconds} s · 9 bar` : STATUS[phase]) : null}
           </p>
 
@@ -313,7 +374,9 @@ export function Espresso() {
             </button>
           </div>
           <p id="espresso-hint" className="mt-4 text-sm text-roast/75">
-            Tipp: Du kannst auch direkt an der Maschine klicken, der leuchtende Ring zeigt dir wo.
+            {mode === '3d'
+              ? 'Tipp: Du kannst auch direkt an der Maschine klicken, der leuchtende Ring zeigt dir wo.'
+              : 'Tipp: Die Schritte laufen über die Schaltflächen oben.'}
           </p>
         </div>
 
@@ -330,13 +393,23 @@ export function Espresso() {
             role="img"
             className={cn('absolute inset-0 size-full touch-pan-y transition-opacity duration-1000', ready ? 'opacity-100' : 'opacity-0')}
           />
-          {!ready && status !== 'error' ? (
+          {mode === 'still' ? (
+            // eslint-disable-next-line @next/next/no-img-element -- statischer Export
+            <img
+              src={asset(`/media/espresso/${STILL_FOR[phase]}.webp`)}
+              alt=""
+              width={793}
+              height={545}
+              className="absolute inset-0 size-full object-cover object-[45%_50%]"
+            />
+          ) : null}
+          {!ready ? (
             <div aria-hidden="true" className="absolute inset-0 grid place-items-center">
               <span className="size-10 animate-spin rounded-full border-2 border-roast/15 border-t-caramel-deep motion-reduce:animate-none" />
             </div>
           ) : null}
           {shots > 0 ? (
-            <span className="absolute top-5 right-5 rounded-full bg-foam/85 px-4 py-2 text-sm font-semibold backdrop-blur">
+            <span className="absolute top-5 right-5 rounded-full bg-foam/85 px-4 py-2 text-sm font-semibold backdrop-blur pointer-coarse:backdrop-blur-none">
               Shot Nº {shots}
             </span>
           ) : null}

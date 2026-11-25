@@ -22,7 +22,8 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    if (prefersReducedMotion()) return;
+    // Touch-Geräte scrollen nativ (flüssiger, kein Konflikt mit iOS-Trägheit); ebenso bei reduzierter Bewegung.
+    if (prefersReducedMotion() || window.matchMedia('(pointer: coarse)').matches) return;
     const { gsap, ScrollTrigger } = getGsap();
     const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.95, autoRaf: false });
     lenisRef.current = lenis;

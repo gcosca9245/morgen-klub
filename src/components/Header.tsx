@@ -70,7 +70,7 @@ export function Header() {
       <div
         aria-hidden="true"
         className={cn(
-          'absolute inset-0 -z-10 bg-cream/80 backdrop-blur-md transition-opacity duration-700',
+          'absolute inset-0 -z-10 bg-cream/80 backdrop-blur-md transition-opacity duration-700 pointer-coarse:bg-cream/95 pointer-coarse:backdrop-blur-none',
           light || menuOpen ? 'opacity-0' : 'opacity-100',
         )}
       />

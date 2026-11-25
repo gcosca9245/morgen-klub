@@ -1,5 +1,6 @@
 import manifest from './sequences.generated.json';
 import { asset } from './asset';
+import { isCoarsePointer } from './frame-sequence';
 
 export type SequenceName = keyof typeof manifest;
 
@@ -24,12 +25,12 @@ const frameUrl = (name: SequenceName, dir: string, i: number, ext = 'webp') =>
   asset(`/media/seq/${name}/${dir}/${String(i + 1).padStart(3, '0')}.${ext}`);
 
 /**
- * Wählt die kleinste Variante, die das Canvas bei aktueller Pixeldichte (max. 2×) scharf füllt.
+ * Wählt die kleinste Variante, die das Canvas bei aktueller Pixeldichte (max. 2×, Touch 1,5×) scharf füllt.
  * Hochformatige Canvases bekommen – falls vorhanden – den eigens beschnittenen Hochformat-Satz.
  */
 export function sequenceSource(name: SequenceName, cssWidth: number, cssHeight = 0) {
   const v = VARIANTS[name];
-  const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, isCoarsePointer() ? 1.5 : 2);
   const portrait = v.portrait && cssHeight > 0 && cssWidth / cssHeight <= PORTRAIT_MAX_ASPECT;
   let dir: string;
   let focusX = v.focusX;

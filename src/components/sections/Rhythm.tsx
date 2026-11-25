@@ -46,6 +46,7 @@ export function Rhythm() {
           start: 'top top',
           end: () => `+=${window.innerHeight * 2.4}`,
           pin: true,
+          anticipatePin: 1,
           scrub: 0.5,
           invalidateOnRefresh: true,
           onUpdate: (self) => {

@@ -11,11 +11,15 @@ import {
   walnutTexture,
 } from './textures';
 
-export type Hotspot = 'power' | 'hopper' | 'grinder' | 'paddle';
+import type { GameScene, Hotspot } from './game-scene';
+
+export type { Hotspot };
 
 export interface SceneOptions {
   reducedMotion: boolean;
   onHotspot: (h: Hotspot) => void;
+  /** WebGL-Kontext verloren (z. B. Speicherdruck auf iOS) – die UI wechselt auf die 2D-Variante. */
+  onContextLost?: () => void;
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -90,7 +94,7 @@ interface Puff {
  * Echtzeit-3D-Szene der Siebträgermaschine im Dual-Boiler-Stil mit Mühle.
  * Alle Abläufe sind GSAP-Timelines und liefern Promises, damit die UI sauber Zustände wechseln kann.
  */
-export class EspressoScene {
+export class EspressoScene implements GameScene {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
@@ -101,7 +105,9 @@ export class EspressoScene {
   private readonly hotspots = new Map<Hotspot, THREE.Object3D>();
   private readonly disposables: { dispose: () => void }[] = [];
   private readonly ctx: gsap.Context;
-  private readonly clock = new THREE.Clock();
+  private readonly timer = new THREE.Timer();
+  /** Touch-Geräte: geringere Pixeldichte und günstigere Schatten. */
+  private readonly mobile = window.matchMedia('(pointer: coarse)').matches;
   private readonly opts: SceneOptions;
 
   // bewegliche Teile
@@ -151,13 +157,19 @@ export class EspressoScene {
     opts: SceneOptions,
   ) {
     this.opts = opts;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: this.mobile ? 'default' : 'high-performance',
+    });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.mobile ? 1.5 : 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.VSMShadowMap;
+    // VSM braucht Float-Render-Targets und Blur-Passes – auf Mobilgeräten PCF.
+    this.renderer.shadowMap.type = this.mobile ? THREE.PCFShadowMap : THREE.VSMShadowMap;
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     const studio = studioEnvironment();
@@ -206,7 +218,7 @@ export class EspressoScene {
     const key = new THREE.DirectionalLight('#fff1e0', 2.1);
     key.position.set(-5, 9, 7);
     key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.mapSize.setScalar(this.mobile ? 1024 : 2048);
     key.shadow.camera.left = -6;
     key.shadow.camera.right = 6;
     key.shadow.camera.top = 6;
@@ -477,6 +489,7 @@ export class EspressoScene {
     this.disposables.push(hintMat);
 
     /* ---------- Interaktion ---------- */
+    canvas.addEventListener('webglcontextlost', this.onContextLost);
     canvas.addEventListener('pointermove', this.onPointerMove);
     canvas.addEventListener('pointerleave', this.onPointerLeave);
     canvas.addEventListener('click', this.onClick);
@@ -490,7 +503,7 @@ export class EspressoScene {
     if (this.disposed || v === this.running) return;
     this.running = v;
     this.renderer.setAnimationLoop(v ? this.frame : null);
-    if (v) this.clock.getDelta();
+    if (v) this.timer.reset();
   }
 
   resize() {
@@ -607,6 +620,7 @@ export class EspressoScene {
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
     this.ctx.revert();
+    this.canvas.removeEventListener('webglcontextlost', this.onContextLost);
     this.canvas.removeEventListener('pointermove', this.onPointerMove);
     this.canvas.removeEventListener('pointerleave', this.onPointerLeave);
     this.canvas.removeEventListener('click', this.onClick);
@@ -626,6 +640,19 @@ export class EspressoScene {
   }
 
   /* ================================ intern ================================ */
+
+  /** Shader vorab kompilieren (parallel, wo unterstützt), damit der erste Frame nicht ruckelt. */
+  async warmup() {
+    // Ohne Parallel-Compile-Erweiterung bringt compileAsync nichts (und warnt) – dann beim ersten Frame.
+    if (!this.renderer.extensions.has('KHR_parallel_shader_compile')) return;
+    await this.renderer.compileAsync(this.scene, this.camera);
+  }
+
+  private readonly onContextLost = (e: Event) => {
+    e.preventDefault();
+    this.setVisible(false);
+    this.opts.onContextLost?.();
+  };
 
   private register(h: Hotspot, o: THREE.Object3D) {
     o.traverse((c) => {
@@ -708,8 +735,9 @@ export class EspressoScene {
   }
 
   private readonly frame = () => {
-    const dt = Math.min(this.clock.getDelta(), 0.05);
-    const t = this.clock.elapsedTime;
+    this.timer.update();
+    const dt = Math.min(this.timer.getDelta(), 0.05);
+    const t = this.timer.getElapsed();
     const s = this.state;
     const calm = this.opts.reducedMotion;
 
