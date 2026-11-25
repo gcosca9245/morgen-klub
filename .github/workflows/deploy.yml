@@ -30,8 +30,17 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      # Mehrteilige Uploads kommen in mehreren Pushes: erst loslegen, wenn alle Teile da sind
+      # (`patch-upload/parts` enthält die erwartete Anzahl).
+      - name: Vollständigkeit prüfen
+        id: check
+        run: |
+          ready=true
+          if [ -f patch-upload/parts ] && [ "$(ls patch-upload/part.[0-9]* | wc -l)" != "$(cat patch-upload/parts)" ]; then ready=false; fi
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+
       - name: Kompletten Build veröffentlichen
-        if: hashFiles('deploy/part.*') != ''
+        if: steps.check.outputs.ready == 'true' && hashFiles('deploy/part.*') != ''
         run: |
           cat $(ls deploy/part.* | sort -V) | base64 -d > /tmp/site.tgz
           mkdir -p /tmp/site && tar xzf /tmp/site.tgz -C /tmp/site && touch /tmp/site/.nojekyll
@@ -40,15 +49,16 @@ jobs:
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
 
       - name: Build-Patch einspielen
-        if: hashFiles('patch-upload/part.*') != ''
+        if: steps.check.outputs.ready == 'true' && hashFiles('patch-upload/part.*') != ''
         run: |
           git worktree add /tmp/pages origin/gh-pages
-          cat $(ls patch-upload/part.* | sort -V) | base64 -d | tar xzf - -C /tmp/pages
+          cat $(ls patch-upload/part.[0-9]* | sort -V) | base64 -d | tar xzf - -C /tmp/pages
           cd /tmp/pages && git add -A
           git $GIT_AUTHOR commit -qm "Patch ${GITHUB_SHA::7}" || exit 0
           git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:gh-pages
 
       - name: Quelltext entpacken und Upload-Reste entfernen
+        if: steps.check.outputs.ready == 'true'
         run: |
           changed=0
           if [ -f _upload/source.tar.b64 ]; then base64 -d _upload/source.tar.b64 | tar -xf -; git rm -rq _upload; changed=1; fi
