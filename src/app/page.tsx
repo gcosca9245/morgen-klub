@@ -5,6 +5,7 @@ import { Ritual } from '@/components/sections/Ritual';
 import { Roasts } from '@/components/sections/Roasts';
 import { Story } from '@/components/sections/Story';
 import { Reviews } from '@/components/sections/Reviews';
+import { Espresso } from '@/components/sections/Espresso';
 import { Faq } from '@/components/sections/Faq';
 import { Footer } from '@/components/sections/Footer';
 import { CheckoutDialog } from '@/components/CheckoutDialog';
@@ -21,6 +22,7 @@ export default function Page() {
         <Roasts />
         <Story />
         <Reviews />
+        <Espresso />
         <Faq />
       </main>
       <Footer />

@@ -20,6 +20,7 @@ mit eigenem Code, eigener Marke („Morgen Klub“), eigenen generierten Fotos/F
 | Rhythmus | Drehteller mit vier Röstungs-Tüten als echte three.js-Szene (Holzmaserung, Etiketten, weiche Schatten), vorgerendert in 96 Frames für eine geometrisch stabile 360°-Drehung mit dem Scroll. Danach Textwechsel zu „…veredelt.“ und Rhythmus-Pills, die wählbar sind (fließen in den Builder). |
 | Drei Schritte | Karten-Slider mit organischer Silhouette (`clip-path: path()` pixelgenau aus `organicCardPath`), angeschnittene Nachbarn, Pfeile in den Einbuchtungen, Drag/Swipe, Tastatur, Parallaxe. |
 | Abo-Builder | Überlappendes Panel mit Live-Preis (getweente Zahl), Auswahl synchron mit Pills und Karten. |
+| Mini-Barista | Echtzeit-three.js-Szene (`components/espresso`): Siebträgermaschine im Dual-Boiler-Stil + Mühle, PBR-Edelstahl mit prozeduralem Studio-Environment, VSM-Schatten. Ablauf Einschalten → Bohnen (Drag & Drop oder Tipp) → Mahlen (Siebträger fährt zur Mühle) → Bezug (9 bar, zwei Strahlen, Crema). Bedienung per Buttons/Tastatur oder Klick in 3D, Web-Audio-Sound (standardmäßig aus), reduzierte Bewegung, lädt erst in Viewport-Nähe und rendert nur sichtbar. |
 | Weitere | Röstungs-Karten mit 3D-Neigung, Manifest mit Wort-für-Wort-Highlight, Laufband, Akkordeon, Wortmarke im Footer, magnetische Buttons mit rollendem Label. |
 
 ## Struktur
