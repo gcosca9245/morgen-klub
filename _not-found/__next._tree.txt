@@ -1,4 +1,4 @@
-:HL["/morgen-klub/_next/static/chunks/2k9nlghizxndl.css","style"]
+:HL["/morgen-klub/_next/static/chunks/3sb29de6t2d_9.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
-0:{"b":"G7_RIiYlLr7K6kEk52Am8","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"m-hhKklcoNyE-OtTxCJvy","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
