@@ -17,7 +17,7 @@ mit eigenem Code, eigener Marke („Morgen Klub“), eigenen generierten Fotos/F
 | Bereich | Umsetzung |
 | --- | --- |
 | Hero | Gepinnte Karamell-Bühne, Canvas-Bildsequenz (73 Frames) wird gescrubbt: schwebende Tasse → Draufsicht. Headline steigt aus, danach schrumpft die Bühne per `clip-path` zur Karte mit runden Ecken. Pfeile beim Hover springen zwischen Kapiteln, Zeiger-Parallaxe. |
-| Rhythmus | Drehteller mit Röstungen dreht sich mit dem Scroll um 360° (97 Frames), Rhythmus-Pills fliegen mit Federkurve herein und sind wählbar (fließen in den Builder). |
+| Rhythmus | Drehteller mit vier Röstungs-Tüten als echte three.js-Szene (Holzmaserung, Etiketten, weiche Schatten), vorgerendert in 96 Frames für eine geometrisch stabile 360°-Drehung mit dem Scroll. Danach Textwechsel zu „…veredelt.“ und Rhythmus-Pills, die wählbar sind (fließen in den Builder). |
 | Drei Schritte | Karten-Slider mit organischer Silhouette (`clip-path: path()` pixelgenau aus `organicCardPath`), angeschnittene Nachbarn, Pfeile in den Einbuchtungen, Drag/Swipe, Tastatur, Parallaxe. |
 | Abo-Builder | Überlappendes Panel mit Live-Preis (getweente Zahl), Auswahl synchron mit Pills und Karten. |
 | Weitere | Röstungs-Karten mit 3D-Neigung, Manifest mit Wort-für-Wort-Highlight, Laufband, Akkordeon, Wortmarke im Footer, magnetische Buttons mit rollendem Label. |
@@ -36,7 +36,8 @@ src/
   hooks/               useGsap (gsap.context + revert), useFrameSequence, useMagnetic, useReducedMotion, useElementSize
   lib/                 catalog (Produkte, Preise), subscription-store (useSyncExternalStore + localStorage),
                        orders (Demo-Backend, Validierung), frame-sequence (progressiver Canvas-Loader), organic-shape
-scripts/build-assets.mjs  AVIF/WebP-Varianten, Scroll-Sequenzen (ffmpeg), Etiketten auf den Tüten
+scripts/build-assets.mjs  AVIF/WebP-Varianten, Hero-Sequenz (ffmpeg), Etiketten auf den Tüten
+scripts/turntable/        three.js-Szene des Drehtellers + Renderer (Puppeteer) → scripts/turntable-frames.mjs
 assets-src/            Quellbilder und -filme (generiert)
 ```
 
@@ -54,6 +55,8 @@ assets-src/            Quellbilder und -filme (generiert)
 ```bash
 npm install
 npm run assets      # optional: Medien aus assets-src neu erzeugen (ffmpeg nötig)
+# Drehteller neu rendern: scene.html über einen lokalen Server mit three in node_modules öffnen,
+# node scripts/turntable/render.cjs 96 1600 → node scripts/turntable-frames.mjs <frames-ordner>
 npm run dev
 npm run typecheck && npm run lint
 NEXT_PUBLIC_BASE_PATH=/morgen-klub npm run build   # statischer Export nach out/

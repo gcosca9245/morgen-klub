@@ -1,0 +1,157 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>@font-face{font-family:Bric;src:url(font.woff2) format('woff2');font-weight:200 800;font-stretch:75% 100%}html,body{margin:0;background:#f2e8da}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const W = +(new URLSearchParams(location.search).get('w') || 1280), H = Math.round(W * 9 / 16);
+const BG = '#f2e8da';
+await document.fonts.load('800 100px Bric'); await document.fonts.load('600 40px Bric');
+
+// deterministischer Zufall
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+function noiseCanvas(size, amp, base = 128) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d');
+  const img = g.createImageData(size, size);
+  for (let i = 0; i < img.data.length; i += 4) { const v = base + (rnd() - 0.5) * amp; img.data[i] = img.data[i+1] = img.data[i+2] = v; img.data[i+3] = 255; }
+  g.putImageData(img, 0, 0);
+  // weiche Knitterfalten
+  g.globalAlpha = 0.18;
+  for (let k = 0; k < 26; k++) { g.strokeStyle = rnd() > 0.5 ? '#fff' : '#000'; g.lineWidth = 1 + rnd() * 3; g.beginPath(); const x = rnd() * size, y = rnd() * size; g.moveTo(x, y); g.bezierCurveTo(x + rnd()*120-60, y + rnd()*200, x + rnd()*120-60, y + rnd()*300, x + rnd()*160-80, y + rnd()*400); g.stroke(); }
+  return c;
+}
+const bump = new THREE.CanvasTexture(noiseCanvas(512, 40)); bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
+
+function shade(hex, f) { const c = new THREE.Color(hex); c.multiplyScalar(f); return '#' + c.getHexString(); }
+
+function bagTexture({ paper, band, ink, bandInk, no, name }) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 1024; const g = c.getContext('2d');
+  g.fillStyle = paper; g.fillRect(0, 0, 512, 1024);
+  // Papierstruktur
+  const n = noiseCanvas(256, 26); g.globalAlpha = 0.10; g.globalCompositeOperation = 'multiply';
+  for (let y = 0; y < 1024; y += 256) for (let x = 0; x < 512; x += 256) g.drawImage(n, x, y);
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  // Siegelnaht oben
+  g.fillStyle = shade(paper, 0.9); g.fillRect(0, 0, 512, 60);
+  g.fillStyle = shade(paper, 0.8); g.fillRect(0, 58, 512, 3);
+  // Wortmarke
+  g.fillStyle = ink; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.font = '800 118px Bric'; g.fontStretch = 'condensed';
+  g.fillText('MORGEN', 256, 470); g.fillText('KLUB', 256, 578);
+  // Banderole
+  g.fillStyle = band; g.fillRect(0, 650, 512, 170);
+  g.fillStyle = bandInk; g.font = '600 30px Bric'; g.fillText(`Nº ${no} · ${name}`, 256, 722);
+  g.globalAlpha = 0.75; g.font = '500 20px Bric'; g.fillText('250 G · FRISCH GERÖSTET IN KÖLN', 256, 770); g.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+
+function bagGeometry(w, h, d) {
+  const geo = new THREE.BoxGeometry(w, h, d, 16, 48, 10);
+  const p = geo.attributes.position; const v = new THREE.Vector3();
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    const t = v.y / h + 0.5; const xn = v.x / (w / 2);
+    // Giebel: oben flach zusammengedrückt (Siegelnaht)
+    const pinch = 1 - 0.95 * ss(0.74, 0.93, t);
+    // leichte Wölbung der Front durch die Füllung
+    const belly = 1 + 0.22 * Math.sin(Math.PI * Math.min(1, t / 0.8)) * (1 - xn * xn);
+    v.z *= pinch * belly;
+    v.x *= 1 + 0.025 * Math.sin(Math.PI * t) - 0.02 * ss(0.85, 1, t);
+    // Boden leicht ausgestellt
+    if (t < 0.04) v.x *= 1.01;
+    // feine Unregelmäßigkeit
+    v.z += Math.sin(v.y * 37 + v.x * 11) * 0.0025 * pinch;
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  geo.computeVertexNormals(); return geo;
+}
+
+function woodCanvas(size, base) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d');
+  g.fillStyle = base; g.fillRect(0, 0, size, size);
+  // breite, weiche Farbbänder (Jahresringe aus der Distanz)
+  for (let i = 0; i < 18; i++) {
+    const y = rnd() * size, hgt = 20 + rnd() * 90, a = 0.04 + rnd() * 0.07;
+    const gr = g.createLinearGradient(0, y, 0, y + hgt);
+    const col = rnd() > 0.5 ? '70,36,14' : '214,160,110';
+    gr.addColorStop(0, `rgba(${col},0)`); gr.addColorStop(0.5, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`);
+    g.fillStyle = gr; g.fillRect(0, y, size, hgt);
+  }
+  // feine Maserung
+  for (let i = 0; i < 520; i++) {
+    const y = rnd() * size, a = 0.03 + rnd() * 0.08;
+    g.strokeStyle = `rgba(55,28,10,${a})`; g.lineWidth = 0.4 + rnd() * 1.1;
+    g.beginPath(); const amp = 1 + rnd() * 5, fr = 0.002 + rnd() * 0.004, ph = rnd() * 6, x0 = rnd() * size * 0.5, len = size * (0.3 + rnd() * 0.7);
+    for (let x = x0; x <= x0 + len; x += 6) { const yy = y + Math.sin(x * fr + ph) * amp; x === x0 ? g.moveTo(x, yy) : g.lineTo(x, yy); }
+    g.stroke();
+  }
+  return c;
+}
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 0.95;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.VSMShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene(); scene.background = new THREE.Color(BG); 
+const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.7;
+
+const camera = new THREE.PerspectiveCamera(25, W / H, 0.1, 50);
+camera.position.set(0, 1.75, 4.5); camera.lookAt(0, 0.42, 0);
+
+const key = new THREE.DirectionalLight('#fff0dc', 2.7); key.position.set(-4.5, 5.5, 2.6); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 9; key.shadow.blurSamples = 24; key.shadow.bias = -0.0004;
+Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: 1, far: 16 });
+scene.add(key);
+const fill = new THREE.DirectionalLight('#ffe2c4', 0.5); fill.position.set(4, 2.5, 4); scene.add(fill);
+scene.add(new THREE.HemisphereLight('#fff6ea', '#b88a62', 0.35));
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ color: '#5a3a22', opacity: 0.32 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+// Drehteller
+const table = new THREE.Group(); scene.add(table);
+const topTex = new THREE.CanvasTexture(woodCanvas(1024, '#9a6338')); topTex.colorSpace = THREE.SRGBColorSpace; topTex.anisotropy = 8;
+const sideTex = new THREE.CanvasTexture(woodCanvas(1024, '#7e4a28')); sideTex.colorSpace = THREE.SRGBColorSpace; sideTex.wrapS = THREE.RepeatWrapping; sideTex.repeat.set(3, 0.08);
+const woodTop = new THREE.MeshPhysicalMaterial({ map: topTex, roughness: 0.48, clearcoat: 0.35, clearcoatRoughness: 0.4, bumpMap: bump, bumpScale: 0.12 });
+const woodSide = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.55 });
+const board = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.32, 0.11, 160, 1), [woodSide, woodTop, woodTop]);
+board.position.y = 0.115; board.castShadow = board.receiveShadow = true; table.add(board);
+// Fase an der Oberkante
+const bevel = new THREE.Mesh(new THREE.TorusGeometry(1.312, 0.012, 8, 200), woodSide); bevel.rotation.x = Math.PI / 2; bevel.position.y = 0.17; table.add(bevel);
+const base = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.0, 0.06, 120), new THREE.MeshStandardMaterial({ color: '#6e4224', roughness: 0.6 }));
+base.position.y = 0.03; base.castShadow = base.receiveShadow = true; scene.add(base);
+
+const BAGS = [
+  { paper: '#5a3a2b', band: '#c5d5e3', ink: '#f3ebe0', bandInk: '#3a2a22', no: '01', name: 'NACHTSCHICHT', x: -0.5, z: -0.26, r: 0.22 },
+  { paper: '#e9e2d8', band: '#e8c3c1', ink: '#4b2a1d', bandInk: '#4b2a1d', no: '02', name: 'ERSTE SONNE', x: -0.21, z: 0.2, r: 0.06 },
+  { paper: '#a39e98', band: '#c5d5e3', ink: '#2f3640', bandInk: '#2f3640', no: '03', name: 'STADTNEBEL', x: 0.24, z: 0.16, r: -0.07 },
+  { paper: '#a9824e', band: '#ecc6c2', ink: '#4b2a1d', bandInk: '#4b2a1d', no: '04', name: 'GOLDENE STUNDE', x: 0.53, z: -0.24, r: -0.2 },
+];
+const bagGeo = bagGeometry(0.4, 0.84, 0.22);
+for (const b of BAGS) {
+  const tex = bagTexture({ ...b, ink: b.ink, band: b.band });
+  // Banderolen-Text immer dunkel: zweite Textur nicht nötig, Ink der Wortmarke variiert je Papier
+  const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.86, bumpMap: bump, bumpScale: 0.35 });
+  const side = new THREE.MeshStandardMaterial({ color: shade(b.paper, 0.93), roughness: 0.88, bumpMap: bump, bumpScale: 0.35 });
+  const m = new THREE.Mesh(bagGeo, [side, side, side, side, face, face]);
+  m.position.set(b.x, 0.17 + 0.42, b.z); m.rotation.y = b.r; m.castShadow = m.receiveShadow = true; table.add(m);
+}
+
+function blob(alpha) { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, `rgba(40,20,8,${alpha})`); gr.addColorStop(1, 'rgba(40,20,8,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c); }
+const under = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: blob(0.45), transparent: true, depthWrite: false }));
+under.rotation.x = -Math.PI / 2; under.position.y = 0.002; scene.add(under);
+for (const m of table.children.filter((c) => c.geometry === bagGeo)) {
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.42), new THREE.MeshBasicMaterial({ map: blob(0.55), transparent: true, depthWrite: false }));
+  d.rotation.x = -Math.PI / 2; d.position.set(m.position.x, 0.1715, m.position.z); d.rotation.z = m.rotation.y; table.add(d);
+}
+window.renderFrame = (i, n) => { table.rotation.y = -(i / n) * Math.PI * 2; renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); };
+window.ready = true;
+</script></body></html>

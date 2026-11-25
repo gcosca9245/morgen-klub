@@ -166,7 +166,7 @@ export function Ritual() {
                 inert={i !== index}
                 className={cn(
                   'relative aspect-[4/5] w-[86vw] shrink-0 overflow-hidden transition-[opacity,filter] duration-700 sm:aspect-[16/10] md:w-[min(78vw,1180px)]',
-                  i === index ? 'opacity-100' : 'opacity-55 saturate-[0.85]',
+                  i === index ? 'opacity-100' : 'opacity-90',
                 )}
                 style={{ clipPath: shape, backgroundColor: s.bg }}
               >

@@ -13,7 +13,6 @@ const WIDTHS = [720, 1280];
 /** Scroll-Sequenzen: Quelle, jedes n-te Bild, Zielbreiten. */
 const SEQUENCES = [
   { name: 'hero', file: 'hero-transition.mp4', step: 2 },
-  { name: 'turntable', file: 'turntable.mp4', step: 2 },
 ];
 
 mkdirSync(OUT, { recursive: true });
@@ -41,6 +40,8 @@ for (const seq of SEQUENCES) {
     manifest[seq.name] = readdirSync(dir).filter((f) => f.endsWith('.webp')).length;
   }
 }
+// Der Drehteller kommt aus der 3D-Szene (scripts/turntable), nicht aus einem Film.
+manifest.turntable = readdirSync(join(OUT, 'seq', 'turntable', '720')).filter((f) => f.endsWith('.webp')).length;
 writeFileSync('src/lib/sequences.generated.json', JSON.stringify(manifest, null, 2) + '\n');
 console.log('Sequenzen:', manifest);
 

@@ -13,8 +13,8 @@ import { SplitWords } from '../ui/SplitWords';
 import { useSmoothScroll } from '../providers/SmoothScroll';
 
 /** Kapitel des Hero-Films (Anteil am Pin-Fortschritt), für Punkte-Navigation und Pfeile. */
-const CHAPTERS = [0, 0.34, 0.66, 1] as const;
-const PIN_LENGTH = 2.2; // Viewport-Höhen
+const CHAPTERS = [0, 0.46, 1] as const;
+const PIN_LENGTH = 1.8; // Viewport-Höhen
 
 /**
  * Hero: Karamell-Bühne mit gescrubbtem Film (schwebende Tasse → Draufsicht auf Untertasse).
@@ -49,32 +49,35 @@ export function Hero() {
           start: 'top top',
           end: () => `+=${window.innerHeight * PIN_LENGTH}`,
           pin: true,
-          scrub: 0.4,
+          scrub: 0.6,
           invalidateOnRefresh: true,
           onUpdate: (self) => setChapter(self.progress),
         },
       });
 
-      tl.to(film, { p: 1, duration: 0.64, onUpdate: () => seq.current?.setProgress(film.p) }, 0)
-        .to('[data-hero-copy]', { yPercent: -38, autoAlpha: 0, duration: 0.2, ease: 'power1.in' }, 0.03)
-        .fromTo('[data-hero-caption]', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.12, ease: EASE.out }, 0.4)
-        .to('[data-hero-caption]', { autoAlpha: 0, y: -16, duration: 0.08 }, 0.64)
+      // Timing nach Referenz-Film (8 fps ausgewertet): Tasse setzt sich auf die Untertasse und dreht in die
+      // Draufsicht, während die Headline nach oben wegscrollt; kurz vor Ende der Drehung rundet sich die Bühne
+      // zur Karte. Danach steht die Draufsicht (Pfeile per Hover), bevor die nächste Sektion kommt.
+      tl.to(film, { p: 1, duration: 0.4, ease: EASE.inOut, onUpdate: () => seq.current?.setProgress(film.p) }, 0)
+        .to('[data-hero-copy]', { y: () => -window.innerHeight * 0.55, duration: 0.3, ease: 'power1.in' }, 0)
+        .to('[data-hero-copy]', { autoAlpha: 0, duration: 0.1, ease: 'none' }, 0.2)
         .fromTo(
           '[data-panel]',
           { clipPath: 'inset(0px 0px 0px 0px round 0px 0px 0px 0px)' },
           {
             clipPath: () => {
-              const side = window.innerWidth < 768 ? 12 : 28;
-              const bottom = Math.round(window.innerHeight * 0.16);
-              return `inset(0px ${side}px ${bottom}px ${side}px round 0px 0px 48px 48px)`;
+              const side = Math.round(Math.max(10, window.innerWidth * 0.012));
+              const bottom = Math.round(window.innerHeight * 0.1);
+              return `inset(0px ${side}px ${bottom}px ${side}px round 0px 0px 44px 44px)`;
             },
-            duration: 0.3,
+            duration: 0.2,
             ease: EASE.inOut,
           },
-          0.68,
+          0.28,
         )
-        .to(canvas.current, { scale: 0.92, yPercent: -5, duration: 0.3, ease: EASE.inOut }, 0.68)
-        .to('[data-hero-dots]', { y: () => -window.innerHeight * 0.16, duration: 0.3, ease: EASE.inOut }, 0.68);
+        .to(canvas.current, { scale: 0.95, duration: 0.2, ease: EASE.inOut }, 0.28)
+        .to('[data-hero-dots]', { y: () => -window.innerHeight * 0.1, duration: 0.2, ease: EASE.inOut }, 0.28)
+        .to({}, { duration: 0.52 }); // Halten der Draufsicht
 
       const pointerFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
       if (!pointerFine) return;
@@ -146,13 +149,6 @@ export function Hero() {
           </div>
         </div>
 
-        <p
-          data-hero-caption
-          className="invisible absolute bottom-24 left-5 z-10 max-w-xs text-sm leading-relaxed text-foam/90 md:left-10 md:max-w-sm md:text-base"
-        >
-          <span className="font-display mb-2 block text-2xl font-bold text-foam md:text-3xl">48 Stunden.</span>
-          So lange dauert es vom Trommelröster in Köln bis zu deiner ersten Tasse.
-        </p>
 
         <div className="pointer-events-none absolute inset-x-0 top-1/2 z-20 hidden -translate-y-1/2 justify-between px-6 opacity-0 transition-opacity duration-700 group-hover/hero:pointer-events-auto group-hover/hero:opacity-100 md:flex">
           <CircleButton aria-label="Vorheriges Kapitel" onClick={() => goToChapter(-1)}>
@@ -165,11 +161,12 @@ export function Hero() {
       </div>
 
       <div data-hero-dots aria-hidden="true" className="absolute inset-x-0 bottom-8 z-20 flex justify-center gap-2">
-        {CHAPTERS.slice(0, 3).map((c) => (
+        {/* Vier Balken wie in der Referenz; Kapitel 1 und 2 schalten die ersten beiden aktiv. */}
+        {[0, 1, 2, 3].map((i) => (
           <span
-            key={c}
+            key={i}
             data-dot
-            data-active={c === 0}
+            data-active={i === 0}
             className="h-[3px] w-6 rounded-full bg-foam/40 transition-all duration-700 ease-[var(--ease-out-expo)] data-[active=true]:w-12 data-[active=true]:bg-foam"
           />
         ))}
